@@ -70,6 +70,8 @@ comp <- # standing stock
 comp$Taxa_den <- rank_den$Taxa[match(comp$Taxon, rank_den$Taxon)]
 comp$Taxa_bio <- rank_bio$Taxa[match(comp$Taxon, rank_bio$Taxon)]
 
+save(comp, file = "data/composition.RData")
+
 den_comp_ggplot <- 
   comp[comp$Variable == "Density",] %>% 
   ggplot(aes(x = Station_zh, y = Value, fill = Taxa_den))+
