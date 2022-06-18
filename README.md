@@ -1,5 +1,11 @@
 # 2022 Ocean Conservation Administration midterm report
 
+The analysis, result, and manuscript for the 2022 OCA midterm report.
+
+# Repository content
+
+-----
+
 **R/**  analysis r codes
 
 **data/** .RData files for importing processed files. This could only be used wihin the R codes of this project.
