@@ -1,4 +1,4 @@
-# 2022 Ocean Conservation Association midterm report
+# 2022 Ocean Conservation Administration midterm report
 
 R/ analysis r codes
 
@@ -6,6 +6,8 @@ data/ .RData files for importing processed files
 
 source/ source codes for functions
 
-tab/ tables
+tab/ curated data ("2022_OCA_midterm_macro_size.xlsx" available for analysis) and result tables.
 
 xlsx/ raw data as .xlsx files
+
+report/ results ready for report
