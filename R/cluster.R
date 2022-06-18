@@ -151,7 +151,13 @@ bio_dendro_ggplot <-
         panel.background = element_blank(),
         panel.border = element_blank(), # remove border
         axis.line.x.bottom = element_line(colour = "black")) # add back y border
-cluster_plot <- den_dendro_ggplot + theme(legend.position = "none")+ bio_dendro_ggplot
+cluster_plot <- 
+  den_dendro_ggplot + theme(legend.position = "none")+ 
+  bio_dendro_ggplot +
+  plot_annotation(tag_levels = "a",
+                  tag_prefix = "(",
+                  tag_suffix = ")")
+
 plot_save(cluster_plot, "cluster", h = 6, w = 8, scale = 1.7)
 
 

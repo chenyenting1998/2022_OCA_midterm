@@ -42,9 +42,11 @@ set.seed(1)
 ss_name <- 
   c("Density" = "Density~(ind.~m^-2)",
     "Biomass" = "Biomass~(g~wet~weight~m^-2)")
+fct_loc <- c("Penghu", "North", "Taoyuan", "Liuqiu", "East")
 
 boxplot_ggplot <- 
   ss %>% 
+  mutate(Location = factor(Location, fct_loc)) %>% 
   ggplot(aes(x = Location, y = Value, color = Location))+
   geom_boxplot(outlier.shape = NA) +
   geom_point(position = "jitter")+
@@ -70,18 +72,18 @@ comp <- # standing stock
 comp$Taxa_den <- rank_den$Taxa[match(comp$Taxon, rank_den$Taxon)]
 comp$Taxa_bio <- rank_bio$Taxa[match(comp$Taxon, rank_bio$Taxon)]
 
-save(comp, file = "data/composition.RData")
-
 den_comp_ggplot <- 
   comp[comp$Variable == "Density",] %>% 
+  mutate(Location = factor(Location, fct_loc)) %>% 
   ggplot(aes(x = Station_zh, y = Value, fill = Taxa_den))+
   geom_bar(stat = "identity")+
   facet_grid(~Location, scales = "free_x", space = "free")+
   scale_fill_manual(values = taxa_den_color)+
   scale_y_continuous(expand = c(0,0.1), 
                      limits = c(0,max(ss[ss$Variable == "Density",]$Value) * 1.05))+
+  xlab("Station")+
   ylab(Density~(ind.~m^-2))+
-  guides(guide_legend(title = "Taxa"))+
+  guides(fill = guide_legend(title = "Taxa"))+
   theme_bw()+
   theme(axis.text.x = element_text(family = msjh, 
                                    angle = 90,
@@ -92,18 +94,49 @@ plot_save(den_comp_ggplot, "composition_density")
 # Biomass composition ------
 bio_comp_ggplot <- 
   comp[comp$Variable == "Biomass",] %>% 
+  mutate(Location = factor(Location, fct_loc)) %>% 
   ggplot(aes(x = Station_zh, y = Value, fill = Taxa_bio))+
   geom_bar(stat = "identity")+
   facet_grid(~Location, scales = "free_x", space = "free")+
   scale_fill_manual(values = taxa_bio_color)+
   scale_y_continuous(expand = c(0,0.1), 
                      limits = c(0,max(ss[ss$Variable == "Biomass",]$Value) * 1.05))+
+  xlab("Station")+
   ylab(Biomass~(g~wet~weight~m^-2))+
   theme_bw()+
-  guides(guide_legend(title = "Taxa"))+
+  guides(fill = guide_legend(title = "Taxa"))+
   theme(axis.text.x = element_text(family = msjh, 
                                    angle = 90,
                                    hjust = 1,
                                    vjust = 0.5))
 
 plot_save(bio_comp_ggplot, "composition_biomass")
+
+#density table ----
+den_table_ph <-
+  comp %>%
+  ungroup %>%
+  filter(Location == "Penghu") %>% 
+  filter(Variable == "Density") %>% 
+  select(Station_zh, Taxon, Value) %>%
+  pivot_wider(names_from = "Station_zh", values_from = "Value", values_fill = 0)
+
+den_table_n <-
+  comp %>%
+  ungroup %>%
+  filter(Location == "North") %>% 
+  filter(Variable == "Density") %>% 
+  select(Station_zh, Taxon, Value) %>%
+  pivot_wider(names_from = "Station_zh", 
+              values_from = "Value", 
+              values_fill = 0)
+
+den_table_tle <-
+  comp %>%
+  ungroup %>%
+  filter(Location %in% c("Taoyuan", "Liuqiu","East")) %>% 
+  filter(Variable == "Density") %>% 
+  select(Station_zh, Taxon, Value) %>%
+  pivot_wider(names_from = "Station_zh", 
+              values_from = "Value", 
+              values_fill = 0)

@@ -1,13 +1,13 @@
 pacman::p_load(dplyr, writexl, readxl)
 # color code
 loc_color <-
-  c("North" = "purple", 
-    "East" = "green", 
+  c("Penghu" = "black",
+    "North" = "purple", 
+    "Taoyuan" = "darkgrey", 
     "Liuqiu" = "orange", 
-    "TY" = "darkgrey", 
-    "Penghu" = "black", 
-    "N. Penghu" = "red", 
-    "S. Penghu" = "blue")
+    "East" = "green") 
+    # "N. Penghu" = "red", 
+    # "S. Penghu" = "blue",
 prog_color <-
   c("Analyzed" = "cyan", "Sampled" = "pink")
 
