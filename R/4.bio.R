@@ -21,7 +21,7 @@ gc_area <- (6.6 / 2 * 0.01) ^2 * pi # gravity core area
 sw <- 1.13 # specific weight
 
 # function
-plot_save <- function(object, name, scale = 1.5, h = 4, w = 8){
+plot_save <- function(object, name, scale = 1.5, h = 3.5, w = 8){
   L <- paste0("fig/", name, ".png")
   ggsave(filename = L,
          plot = object,
@@ -33,6 +33,8 @@ plot_save <- function(object, name, scale = 1.5, h = 4, w = 8){
 # Boxplot (abundance and biomass) ----
 ss <- # standing stock
   size %>% 
+  filter(Condition %in% c("C", "FH")) %>% 
+  filter(!Taxon %in% c("Unknown")) %>% 
   mutate(Location = gsub("2021.", "", Location)) %>% 
   group_by(Location, Station_zh, Tube, Section) %>% 
   summarize(Density = n()/gc_area, 
@@ -102,6 +104,8 @@ write_xlsx(list(KW_density = kw_density,
 # Density composition ------
 comp <- # standing stock
   size %>% 
+  filter(Condition %in% c("C", "FH")) %>% 
+  filter(!Taxon %in% c("Unknown")) %>% 
   mutate(Location = gsub("2021.", "", Location)) %>% 
   group_by(Location, Station_zh, Taxon) %>% 
   summarize(Density = n()/gc_area, 
@@ -112,7 +116,7 @@ comp <- # standing stock
 comp$Taxa_den <- rank_den$Taxa[match(comp$Taxon, rank_den$Taxon)]
 comp$Taxa_bio <- rank_bio$Taxa[match(comp$Taxon, rank_bio$Taxon)]
 
-den_comp_ggplot <- 
+den_comp_ind_ggplot <- 
   comp[comp$Variable == "Density",] %>% 
   mutate(Location = factor(Location, fct_loc)) %>% 
   ggplot(aes(x = Station_zh, y = Value, fill = Taxa_den))+
@@ -130,9 +134,31 @@ den_comp_ggplot <-
                                    hjust = 1,
                                    vjust = 0.5))
 
-plot_save(den_comp_ggplot, "composition_density")
+plot_save(den_comp_ind_ggplot, "composition_density_ind.")
+
+den_comp_ggplot_percent <- 
+  comp[comp$Variable == "Density",] %>% 
+  mutate(Location = factor(Location, fct_loc)) %>% 
+  ggplot(aes(x = Station_zh, y = Value, fill = Taxa_den))+
+  geom_bar(stat = "identity", position = "fill")+
+  facet_grid(~Location, scales = "free_x", space = "free")+
+  scale_fill_manual(values = taxa_den_color)+
+  # scale_y_continuous(expand = c(0,0.1), 
+                     # limits = c(0,max(ss[ss$Variable == "Density",]$Value) * 1.05))+
+  xlab("Station")+
+  ylab("Density (%)")+
+  guides(fill = guide_legend(title = "Taxa"))+
+  theme_bw()+
+  theme(axis.text.x = element_text(family = msjh, 
+                                   angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.5))
+
+plot_save(den_comp_ggplot_percent, "composition_density_percent")
+
+
 # Biomass composition ------
-bio_comp_ggplot <- 
+bio_comp_g_ggplot <- 
   comp[comp$Variable == "Biomass",] %>% 
   mutate(Location = factor(Location, fct_loc)) %>% 
   ggplot(aes(x = Station_zh, y = Value, fill = Taxa_bio))+
@@ -150,7 +176,26 @@ bio_comp_ggplot <-
                                    hjust = 1,
                                    vjust = 0.5))
 
-plot_save(bio_comp_ggplot, "composition_biomass")
+plot_save(bio_comp_g_ggplot, "composition_biomass_g")
+
+
+bio_comp_percent_ggplot <- 
+  comp[comp$Variable == "Biomass",] %>% 
+  mutate(Location = factor(Location, fct_loc)) %>% 
+  ggplot(aes(x = Station_zh, y = Value, fill = Taxa_bio))+
+  geom_bar(stat = "identity", position = "fill")+
+  facet_grid(~Location, scales = "free_x", space = "free")+
+  scale_fill_manual(values = taxa_bio_color)+
+  xlab("Station")+
+  ylab("Biomass (%)")+
+  theme_bw()+
+  guides(fill = guide_legend(title = "Taxa"))+
+  theme(axis.text.x = element_text(family = msjh, 
+                                   angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.5))
+
+plot_save(bio_comp_percent_ggplot, "composition_biomass_percent")
 
 # Phylum rank ----
 phylum_rank <- 
@@ -194,7 +239,7 @@ den_table_tle <-
   full_join(table("Density", "Taoyuan"), 
             table("Density", "Liuqiu")) %>%
   full_join(table("Density", "East")) %>% 
-  slice(match(phylum_rank, Phylum))
+  slice(match(c(phylum_rank, "Total density"), c(Phylum, "Total density")))
 
 # biomass talbe ----
 bio_table_ph <- table("Biomass", "Penghu")
@@ -203,7 +248,7 @@ bio_table_tle <-
   full_join(table("Biomass", "Taoyuan"), 
             table("Biomass", "Liuqiu")) %>%
   full_join(table("Biomass", "East")) %>% 
-  slice(match(phylum_rank, Phylum))
+  slice(match(c(phylum_rank, "Total biomass"), c(Phylum, "Total biomass")))
 
 write_xlsx(list(Density_Penghu = den_table_ph, 
                 Density_North = den_table_n, 

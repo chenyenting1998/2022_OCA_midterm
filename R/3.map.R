@@ -58,13 +58,13 @@ t <- plot_map(t_map) + add_st(st, loc = "TY") + add_st_lab(st, loc = "TY") + ht
 plot_save(p + n + plot_annotation(tag_levels = "a",
                                   tag_prefix = "(",
                                   tag_suffix = ")"), 
-          "Penghu_North", scale = 1.7)
+          "map_Penghu_North", scale = 1.7)
 sp1 <- wrap_plots(t, l, ncol = 1)
 plot_save(sp1 - e + plot_annotation(tag_levels = "a",
                                     tag_prefix = "(",
                                     tag_suffix = ")")
-          , "TY_Liuqiu_East", scale = 1.7)
-plot_save(tw, "tw")
+          , "map_TY_Liuqiu_East", scale = 1.7)
+plot_save(tw, "map_tw")
 
 e_map_ggplot <- plot_map(e_map)
 n_map_ggplot <- plot_map(n_map)
