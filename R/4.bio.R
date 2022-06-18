@@ -1,11 +1,13 @@
 # prep ----
 pacman::p_load(dplyr, 
                readxl,
+               writexl,
                tidyr, 
                ggplot2, 
                Polychrome, 
                ggrepel, 
-               extrafont)
+               extrafont,
+               GRSPRSThesisData)
 # source
 source("source/msjh.R")
 
@@ -59,11 +61,49 @@ boxplot_ggplot <-
 
 plot_save(boxplot_ggplot, "standing_stock_boxplot", scale = 1)
 
+# Kruskal wallis
+# remove ty due to few samples
+ss_pnle <- ss[ss$Location != "Taoyuan",]
+library(FSA)
+kw_density <- 
+  kruskal.test(Value~Location, 
+               data = ss_pnle[ss_pnle$Variable == "Density",])
+
+kw_density <- 
+  data.frame("chi-squared" = kw_density$statistic,
+             "df" = kw_density$parameter,
+             "p.value" = kw_density$p.value,
+             row.names = "Density")
+d_density <-
+  dunnTest(Value~Location, 
+           data = ss_pnle[ss_pnle$Variable == "Density",],
+           method = "bonferroni")
+
+kw_biomass <- 
+  kruskal.test(Value~Location, 
+               data = ss_pnle[ss_pnle$Variable == "Biomass",])
+
+kw_biomass <- 
+  data.frame("chi-squared" = kw_biomass$statistic,
+             "df" = kw_biomass$parameter,
+             "p.value" = kw_biomass$p.value,
+             row.names = "Biomass")
+d_biomass <-
+  dunnTest(Value~Location,
+           data = ss_pnle[ss_pnle$Variable == "Biomass",],
+           method = "bonferroni")
+
+write_xlsx(list(KW_density = kw_density,
+                Dunn_density = as.data.frame(d_density$res),
+                KW_biomass = kw_biomass,
+                Dunn_biomass = as.data.frame(d_biomass$res)),
+           path = "tab/nonparm_test_standing_stock.xlsx")
+
 # Density composition ------
 comp <- # standing stock
   size %>% 
   mutate(Location = gsub("2021.", "", Location)) %>% 
-  group_by(Location, Station_zh, Tube, Section, Taxon) %>% 
+  group_by(Location, Station_zh, Taxon) %>% 
   summarize(Density = n()/gc_area, 
             Biomass = sum(Size * sw) / gc_area / 1000) %>% 
   pivot_longer(cols = c("Density", "Biomass"),
@@ -112,31 +152,63 @@ bio_comp_ggplot <-
 
 plot_save(bio_comp_ggplot, "composition_biomass")
 
+# Phylum rank ----
+phylum_rank <- 
+  c("Annelida", "Arthopoda", "Echinodermata", "Mollusca", "Cnidaria",
+    "Nematoda", "Nemertea", "Entoprocta", "Bryozoa", "Phoronida",
+    "Chaetognatha", "Hemichordata", "Chordata", "Platyhelminthes",
+    "Tardigrada","Unknown")
+
+table <- function(v = "Density", location = "Penghu"){
+  x <-
+    comp %>%
+    add_coarse_taxon(coarse_taxa_add, output = "Phylum") %>%
+    ungroup %>%
+    filter(Location %in% location) %>%
+    filter(Variable %in% v) %>%
+    select(Phylum, Station_zh, Taxon, Value) %>%
+    pivot_wider(names_from = "Station_zh",
+                values_from = "Value",
+                values_fill = NA_integer_) %>%
+    group_by(Phylum, Taxon) %>%
+    slice(match(phylum_rank, Phylum))
+  
+  s <- strsplit(v, "")[[1]]
+  s[1] <- tolower(s[1])
+  V <- paste0(s, collapse = "")
+  
+  a <- rbind(x[1:2], 
+             data.frame(Phylum = paste0("Total ", V), Taxon = ""))
+  
+  sum_narm <- function(x) sum(x, na.rm = TRUE)
+  b <- rbind(x[-(1:2)], 
+             apply(x[-(1:2)], 2, sum_narm))
+  cbind(a,b)
+}
+
 #density table ----
-den_table_ph <-
-  comp %>%
-  ungroup %>%
-  filter(Location == "Penghu") %>% 
-  filter(Variable == "Density") %>% 
-  select(Station_zh, Taxon, Value) %>%
-  pivot_wider(names_from = "Station_zh", values_from = "Value", values_fill = 0)
+den_table_ph <- table("Density", "Penghu")
+den_table_n <- table("Density", "North")
+  
+den_table_tle <- 
+  full_join(table("Density", "Taoyuan"), 
+            table("Density", "Liuqiu")) %>%
+  full_join(table("Density", "East")) %>% 
+  slice(match(phylum_rank, Phylum))
 
-den_table_n <-
-  comp %>%
-  ungroup %>%
-  filter(Location == "North") %>% 
-  filter(Variable == "Density") %>% 
-  select(Station_zh, Taxon, Value) %>%
-  pivot_wider(names_from = "Station_zh", 
-              values_from = "Value", 
-              values_fill = 0)
+# biomass talbe ----
+bio_table_ph <- table("Biomass", "Penghu")
+bio_table_n <- table("Biomass", "North")
+bio_table_tle <- 
+  full_join(table("Biomass", "Taoyuan"), 
+            table("Biomass", "Liuqiu")) %>%
+  full_join(table("Biomass", "East")) %>% 
+  slice(match(phylum_rank, Phylum))
 
-den_table_tle <-
-  comp %>%
-  ungroup %>%
-  filter(Location %in% c("Taoyuan", "Liuqiu","East")) %>% 
-  filter(Variable == "Density") %>% 
-  select(Station_zh, Taxon, Value) %>%
-  pivot_wider(names_from = "Station_zh", 
-              values_from = "Value", 
-              values_fill = 0)
+write_xlsx(list(Density_Penghu = den_table_ph, 
+                Density_North = den_table_n, 
+                Density_Taoyuan_Liuqiu_East = den_table_tle,
+                Biomass_Penghu = bio_table_ph,
+                Biomass_North = bio_table_n,
+                Biomass_Taoyuan_Liuqiu_East = bio_table_tle), 
+           "tab/2022_OCA_midterm_density_biomass_table.xlsx")
