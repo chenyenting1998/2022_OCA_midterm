@@ -98,14 +98,14 @@ pairwise_den_perm[[1]] <- NULL
 
 pairwise_bio_table <- 
   lapply(pairwise_bio_perm, function(x) { 
-    x$p.adjust <- x$`Pr(>F)` * 6
+    x$p.adjust <- p.adjust(x$`Pr(>F)`, method = "bonferroni", n = 6)
     name <- rownames(x)
     x <- cbind(name, x)
     return(x)})
 
 pairwise_den_table <- 
   lapply(pairwise_den_perm, function(x) { 
-    x$p.adjust <- x$`Pr(>F)` * 6
+    x$p.adjust <- p.adjust(x$`Pr(>F)`, method = "bonferroni", n = 6)
     name <- rownames(x)
     x <- cbind(name, x)
     return(x)})

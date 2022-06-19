@@ -29,6 +29,13 @@ plot_save <- function(object, name, scale = 1.5, h = 3.5, w = 8){
          height = h,
          width = w)
 }
+size %>% filter(Station_zh %in% ("潮境")) %>% View
+
+ss %>% 
+  ungroup %>% 
+  group_by(Location, Variable) %>% 
+  summarise(mean(Value)) %>% 
+  arrange(Variable)
 
 # Boxplot (abundance and biomass) ----
 ss <- # standing stock
@@ -36,7 +43,7 @@ ss <- # standing stock
   filter(Condition %in% c("C", "FH")) %>% 
   filter(!Taxon %in% c("Unknown")) %>% 
   mutate(Location = gsub("2021.", "", Location)) %>% 
-  group_by(Location, Station_zh, Tube, Section) %>% 
+  group_by(Location, Station_zh) %>% 
   summarize(Density = n()/gc_area, 
             Biomass = sum(Size * sw) / gc_area / 1000) %>% 
   pivot_longer(cols = c("Density", "Biomass"),
@@ -143,8 +150,8 @@ den_comp_ggplot_percent <-
   geom_bar(stat = "identity", position = "fill")+
   facet_grid(~Location, scales = "free_x", space = "free")+
   scale_fill_manual(values = taxa_den_color)+
-  # scale_y_continuous(expand = c(0,0.1), 
-                     # limits = c(0,max(ss[ss$Variable == "Density",]$Value) * 1.05))+
+  scale_y_continuous(expand = c(0,0),
+                     label = scales::percent) +
   xlab("Station")+
   ylab("Density (%)")+
   guides(fill = guide_legend(title = "Taxa"))+
@@ -186,6 +193,8 @@ bio_comp_percent_ggplot <-
   geom_bar(stat = "identity", position = "fill")+
   facet_grid(~Location, scales = "free_x", space = "free")+
   scale_fill_manual(values = taxa_bio_color)+
+  scale_y_continuous(expand = c(0, 0),
+                     label = scales::percent) +
   xlab("Station")+
   ylab("Biomass (%)")+
   theme_bw()+

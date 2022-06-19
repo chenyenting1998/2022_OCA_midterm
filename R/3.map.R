@@ -22,7 +22,7 @@ map <-
               Lat = Lat) %>%
   cbind(Ele = as.vector(Ele)) %>% 
   as.data.frame() %>% 
-  filter(Lon > 119 & Lon < 123 & Lat > 21.5 & Lat < 26)
+  filter(Lon > 119 & Lon < 122.5 & Lat > 21.5 & Lat < 25.8)
 
 # remove 
 rm(list = c("map_nc", "Lon", "Lat", "Ele"))
@@ -31,7 +31,8 @@ rm(list = c("map_nc", "Lon", "Lat", "Ele"))
 tw <- 
   plot_map(map) + 
   add_tw_st(st, unique(st$Location))+
-  scale_color_manual(values = loc_color[1:5])
+  scale_color_manual(values = loc_color[1:5]) +
+  theme(legend.position = c(0.15,0.15))
 
 # plot location ----
 # `location`_corner
@@ -59,12 +60,19 @@ plot_save(p + n + plot_annotation(tag_levels = "a",
                                   tag_prefix = "(",
                                   tag_suffix = ")"), 
           "map_Penghu_North", scale = 1.7)
-sp1 <- wrap_plots(t, l, ncol = 1)
-plot_save(sp1 - e + plot_annotation(tag_levels = "a",
+sp2 <- wrap_plots(t, l, ncol = 1)
+plot_save(sp2 + plot_annotation(tag_levels = "a",
                                     tag_prefix = "(",
                                     tag_suffix = ")")
           , "map_TY_Liuqiu_East", scale = 1.7)
+sp1 <- p + n
+sp2 <- sp2 - e
 plot_save(tw, "map_tw")
+plot_save(tw + (sp1 / sp2) + 
+            plot_annotation(tag_levels = "a",
+                            tag_prefix = "(",
+                            tag_suffix = ")"),
+          "map_whole", scale = 2.4)
 
 e_map_ggplot <- plot_map(e_map)
 n_map_ggplot <- plot_map(n_map)

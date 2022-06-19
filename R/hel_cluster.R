@@ -162,5 +162,9 @@ cluster_plot <-
 plot_save(cluster_plot, "hel_cluster", h = 6, w = 8, scale = 1.7)
 
 
+save(all_den_seg, all_den_lab, den_dendro_ggplot,
+     all_bio_seg, all_bio_lab, bio_dendro_ggplot,
+     file = "data/hel_cluster.RData")
+
 #
 # save(bw, dw, file = "data/den_bio_wide.RData")
